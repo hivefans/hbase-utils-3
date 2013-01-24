@@ -1,4 +1,4 @@
-# Uasge: hbase org.jruby.Main test.rb
+# Uasge: hbase org.jruby.Main create_monthly_table.rb 
 
 include Java
 import org.apache.hadoop.hbase.HConstants
