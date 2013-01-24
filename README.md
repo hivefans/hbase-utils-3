@@ -1,2 +1,2 @@
-hbase-utils
+utilities to manage hbase clusters
 ===========
