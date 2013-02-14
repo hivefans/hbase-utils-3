@@ -62,7 +62,7 @@ class Utils
         year = time.year
         month = time.month
         if month == 12
-            year != 1
+            year += 1
             month = 1
         else
             month += 1
@@ -95,7 +95,7 @@ class Utils
         year = time.year
         month = time.month
         if month == 12
-            year != 1
+            year += 1
             month = 1
         else
             month += 1
@@ -121,7 +121,7 @@ class Utils
         year = time.year
         month = time.month
         if month == 12
-            year != 1
+            year += 1
             month = 1
         else
             month += 1
@@ -147,7 +147,7 @@ class Utils
         year = time.year
         month = time.month
         if month == 12
-            year != 1
+            year += 1
             month = 1
         else
             month += 1
