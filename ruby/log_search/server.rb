@@ -63,6 +63,8 @@ get '/single_keyword' do
     qf = column_keyword_substring_filter(keyword)
     ret = Array.new()
     query_hash = Hash.new()
+    total_matches = 0
+    scan_start_time = Time.new()
     table.filter(qf).to_a.each do |result|
         result.each do |cell|
             rowkey = cell.string
@@ -76,8 +78,11 @@ get '/single_keyword' do
             else
                 query_hash[rowkey] = [packed]
             end
+            total_matches += 1
         end
     end
+    scan_end_time = Time.new()
+    print "Total matches " + total_matches.to_s + ". Total time: " + (scan_end_time - scan_start_time).to_s + "s\n"
     table2.get(query_hash.keys).each do |result|
         rowkey = result.rowkey
         query_hash[rowkey].each do |colkey|
@@ -92,9 +97,14 @@ get '/single_keyword2' do
     keyword = params['keyword']
     vf = value_keyword_substring_filter(keyword)
     ret = Array.new()
+    total_matches = 0
     table2.filter(vf).to_a.each do |result|
-        ret.push(result.value)
+        result.each do |cell|
+            ret.push(cell.value)
+            total_matches += 1
+        end
     end
+    print "Total matches: " + total_matches.to_s + "\n"
     return ret.to_json
 end
 
