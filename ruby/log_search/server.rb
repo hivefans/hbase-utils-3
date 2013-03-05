@@ -87,10 +87,7 @@ def query_by_keyword_value_filter(table, keywords, startkey=nil, endkey=nil)
         filtered = table
     end
     keywords.each do |keyword|
-        #print keyword + "\n"
         vf = value_keyword_substring_filter(keyword)
-        #qf = column_keyword_substring_filter(keyword)
-        #filtered = filtered.filter(vf)
         filterList.addFilter(vf)
     end
     filtered = filtered.filter(filterList)
@@ -98,21 +95,20 @@ def query_by_keyword_value_filter(table, keywords, startkey=nil, endkey=nil)
     filtered = filtered.to_a
     filtered.each do |result|
         result.each do |cell|
-            ret.push(cell.string)
-            #begin
-            #    mylog = LogEvent.new()
-            #    mylog.parse_from_string(cell.string)
-            #    ret.push(mylog.name)
-            #    #ret.push([mylog.time, mylog.severity, mylog.data, mylog.name])
-            #rescue Exception => e
-            #    print e.message + "\n"
-            #end
+            mytest = String.from_java_bytes(cell.value)
+            begin
+                mylog = LogEvent.new()
+                mylog.parse_from_string(mytest)
+                ret.push(mylog.name)
+                ret.push([mylog.time, mylog.severity, mylog.data, mylog.name])
+            rescue Exception => e
+                print e.message + "\n"
+            end
         end
     end
     return ret
 end
      
-
 def query_by_keyword_and_timerange(table, keywords, startkey=nil, endkey=nil)
     query_hash = Hash.new()
     filtered = nil
@@ -281,20 +277,52 @@ get '/search_by_keywords' do
     keywords = params['keywords']
     sources = params['sources']
     days = params['days']
+    user_selected_start = params['start']
+    start_time = nil
+    end_time = nil
+    # process days
     if not days
         days = 1
+    else
+        begin
+            days = days.to_i
+        rescue
+            days = 1
+        end
     end
-    end_time = Time.now().to_i
-    start_time = end_time - days.to_i * 86400
-    ret = Array.new()
+    # process start and end time
+    if user_selected_start
+        begin
+            start_time = user_selected_start.to_i
+            end_time = start_time + days * 86400
+        rescue
+            start_time = nil
+        end
+    end
+    if not start_time
+        end_time = Time.now().to_i
+        start_time = end_time - days * 86400
+    end
+    #get query hash
+    ret = Hash.new()
+    query_start = Time.now().to_f
+    ret['value'] = Hash.new()
+    ret['total_records'] = 0
     if sources
         sources.each do |source|
             startkey = create_event_query_rowkey(source, start_time)
             endkey = create_event_query_rowkey(source, end_time)
-            ret.push(query_by_keyword_value_filter(table2, keywords, startkey, endkey))
+            matched = query_by_keyword_value_filter(table2, keywords, startkey, endkey)
+            ret['value'][source] = matched
+            ret['total_records'] += matched.length
             end
     else    
         ret = query_by_keyword_value_filter(table2, keywords)
     end
+    query_end = Time.now().to_f
+    ret['total_time_in_secs'] = query_end - query_start
+    ret['start'] = start_time
+    ret['end'] = end_time
+    ret['days'] = days
     return ret.to_json
 end

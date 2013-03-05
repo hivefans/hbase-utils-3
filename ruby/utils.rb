@@ -116,17 +116,19 @@ class Utils
         createTable(table_name, families, splits, true)              
     end
 
-    def createMonthlyLogTable()
-        time = Time.new
-        year = time.year
-        month = time.month
-        if month == 12
-            year += 1
-            month = 1
-        else
-            month += 1
+    def createMonthlyLogTable(table_name=nil)
+        if not table_name
+            time = Time.new
+            year = time.year
+            month = time.month
+            if month == 12
+                year += 1
+                month = 1
+            else
+                month += 1
+            end
+            table_name = 'log_%04d%02d' % [year, month]
         end
-        table_name = 'log_%04d%02d' % [year, month]
         families = []
         family = Hash.new("event")
         family['NAME'] = 'event'
@@ -136,7 +138,7 @@ class Utils
         families.push(family)
         splits = Java::byte[][16].new
         (0..15).each do |i|
-            split = "%x" % i + '0' * 31
+            split = "%x" % i + '0' * 39
             splits[i] = org.apache.hadoop.hbase.util.Bytes.toBytesBinary(split)
         end
         createTable(table_name, families, splits, true)              
